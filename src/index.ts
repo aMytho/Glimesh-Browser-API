@@ -1,3 +1,4 @@
-import { Num } from './Num'
+import { GlimeshConnection } from "./main"
 
-export { Num }
+export default GlimeshConnection
+export { GlimeshConnection }
