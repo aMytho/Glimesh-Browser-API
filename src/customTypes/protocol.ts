@@ -1,7 +1,10 @@
 /**
  * Possible types we request as refs
  */
-export type Ref = "heartbeat_resp" | "open_resp" | "channel_resp" | "follow_resp" | "chat_resp"
+export type Ref = "heartbeat_resp" | "open_resp" | "channel_resp" | "follow_resp" | "chat_resp" |
+"ban_resp" | "chat_resp" | "delete_resp" | "follow_resp" | "long_timeout_resp" | "short_timeout_resp"|
+"unban_resp" | "unfollow_resp" | "update_stream_info_resp"
+
 /**
  * Topic type
  */
