@@ -1,6 +1,6 @@
 import * as Constants from "./constants"
 import EventEmitter from "eventemitter3"
-import { EventName, QueryParams, Subscription } from "./customTypes/custom"
+import { EventName, Mutation, MutationParams, QueryParams, Subscription } from "./customTypes/custom"
 import { GlimeshParser } from "./parse"
 import { hasValidParam } from "./util/util"
 import { ApiRequest } from "./customTypes/protocol"
@@ -16,7 +16,11 @@ export class GlimeshConnection extends GlimeshParser {
     /**
      * Access token. Allows for write access to the API
      */
-    private accessToken?: string = ""
+    private accessToken?: string = "";
+    /**
+     * Connected to chat using an access token
+     */
+    private usingToken?: boolean = false
     /**
      * The websocket connection to Glimesh.
      */
@@ -75,6 +79,8 @@ export class GlimeshConnection extends GlimeshParser {
             this.connection.addEventListener("message", (glimeshMessage) => this.onMessage(glimeshMessage));
             this.connection.addEventListener("open", (ev) => this.onOpen());
 
+            // Set acccess token state
+            this.usingToken = useToken;
             return true
         } else {
             console.log("You are already connected to Glimesh.");
@@ -169,9 +175,42 @@ export class GlimeshConnection extends GlimeshParser {
                 break;
         }
     }
+
+    public createMutation(mutationType: Mutation, params: MutationParams) {
+        if (!this.usingToken) return;
+
+        switch(mutationType) {
+            case "BanUser":
+                    this.connection.send(`["${this.joinRef}", "ban_resp", "__absinthe__:control","doc", {"query":"mutation {banUser(channelId:${params.channelId}, userId:${params.userId}) {updatedAt, user {username}}}","variables":{} }]`)
+                break;
+                case "CreateChatMessage":
+                    this.connection.send(`["${this.joinRef}", "chat_resp", "__absinthe__:control","doc", {"query":"mutation {createChatMessage(channelId:${params.channelId}, message: {message: "${params.message}"}) {message, id}}","variables":{} }]`)
+                break;
+                case "DeleteChatMessage":
+                    this.connection.send(`["${this.joinRef}", "delete_resp", "__absinthe__:control","doc", {"query":"mutation {deleteChatMessage(channelId:${params.channelId}, messageId:${params.messageId}) {action, id}}","variables":{} }]`)
+                break;
+                case "Follow":
+                    this.connection.send(`["${this.joinRef}", "follow_resp", "__absinthe__:control","doc", {"query":"mutation {follow(liveNotifications:${params.lifeNotifications}, streamerId:${params.streamerId}) {id, streamer {username}}}","variables":{} }]`)
+                break;
+                case "LongTimeout":
+                    this.connection.send(`["${this.joinRef}", "long_timeout_resp", "__absinthe__:control","doc", {"query":"mutation {longTimeoutUser(channelId:${params.channelId}, userId:${params.userId}) {action, id}}","variables":{} }]`)
+                break;
+                case "ShortTimeout":
+                    this.connection.send(`["${this.joinRef}", "short_timeout_resp", "__absinthe__:control","doc", {"query":"mutation {shortTimeoutUser(channelId:${params.channelId}, userId:${params.userId}) {action, id}}","variables":{} }]`)
+                break;
+                case "UnbanUser":
+                    this.connection.send(`["${this.joinRef}", "unban_resp", "__absinthe__:control","doc", {"query":"mutation {unbanUser(channelId:${params.channelId}, userId:${params.userId}) {updatedAt, user {username}}}","variables":{} }]`)
+                break;
+                case "Unfollow":
+                    this.connection.send(`["${this.joinRef}", "unfollow_resp", "__absinthe__:control","doc", {"query":"mutation {unfollow(streamerId: ${params.streamerId}) {id, streamer {username}}}","variables":{} }]`)
+                break;
+                case "UpdateStreamInfo":
+                    this.connection.send(`["${this.joinRef}", "update_stream_info_resp", "__absinthe__:control","doc", {"query":"mutation {updateStreamInfo(channelId: ${params.channelId}, title: ${params.title}) {id, title}}","variables":{} }]`)
+                break;
+        }
+    }
+
+    public query() {
+
+    }
 }
-
-
-//v__absinthe__:doc:-576460752251016623:7487729DEF2D3335F930AC164CE4C7A4A2D908342E024CFE7813FA9C351DDB8D
-//__absinthe__:doc:-576460752251016623:7487729DEF2D3335F930AC164CE4C7A4A2D908342E024CFE7813FA9C351DDB8D
-//__absinthe__:doc:-576460752262244622:8981845F702175FBA83BC45D6838B3BE4B1C3C2784936FA7273315A86745F855

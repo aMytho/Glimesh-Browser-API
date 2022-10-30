@@ -18,6 +18,9 @@ export class GlimeshParser {
         let parsedData: ApiResponse = JSON.parse(data);
         console.log(parsedData);
 
+        // Checks for errors, if found stops execution and returns the problem
+        if (this.checkErrors(parsedData[4])) return {data: parsedData[4].response.errors, type: "Error"}
+
         // Determine the ref and respond acordingly
         switch (parsedData[1]) {
             case "open_resp":
@@ -33,8 +36,30 @@ export class GlimeshParser {
             case "follow_resp":
                 this.subscriptions.push({type: "Followers", id: parsedData[4].response.subscriptionId})
                 return {type: "FollowReady", data: null}
+            case "ban_resp":
+                return {type: "BanData", data: null}
+            case "delete_resp":
+                return {type: "DeleteData", data: null}
+            case "long_timeout_resp":
+                return {type: "LongTimeoutData", data: null}
+            case "short_timeout_resp":
+                return {type: "ShortTimeoutData", data: null}
+            case "unban_resp":
+                return {type: "UnbanData", data: null}
+            case "unfollow_resp":
+                return {type: "UnFollowData", data: null}
+            case "update_stream_info_resp":
+                return {type: "UpdateStreamInfoData", data: null}
             default: return this.handleData(parsedData)
         }
+    }
+
+    private checkErrors(data: any) {
+        console.log(data);
+        if (data.response.errors != undefined && data.response.errors.length > 0) {
+            return true
+        }
+        return false
     }
 
     /**
@@ -73,6 +98,3 @@ export class GlimeshParser {
         return this.subscriptions;
     }
 }
-
-//__absinthe__:doc:-576460752235594415:7487729DEF2D3335F930AC164CE4C7A4A2D908342E024CFE7813FA9C351DDB8D
-//__absinthe__:doc:-576460752235594415:7487729DEF2D3335F930AC164CE4C7A4A2D908342E024CFE7813FA9C351DDB8D
