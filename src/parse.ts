@@ -56,7 +56,7 @@ export class GlimeshParser {
 
     private checkErrors(data: any) {
         console.log(data);
-        if (data.response.errors != undefined && data.response.errors.length > 0) {
+        if (data.response && data.response.errors != undefined && data.response.errors.length > 0) {
             return true
         }
         return false
@@ -81,7 +81,7 @@ export class GlimeshParser {
                 console.log(true)
                 switch(subscription.type) {
                     case "Channel": return {type: "ChannelData", data: data[4].result.data}
-                    case "Chat": console.log(true, true);return {type: "ChatData", data: data[4].result.data}
+                    case "Chat": return {type: "ChatData", data: data[4].result.data}
                     case "Followers": return {type: "FollowData", data: data[4].result.data}
                 }
             }
