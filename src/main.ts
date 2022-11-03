@@ -157,21 +157,24 @@ export class GlimeshConnection extends GlimeshParser {
      * @param subType The event to subscribe to. Corresponds to a graphql subscription
      * @param params The entity to target. See API to know which params to use.
      */
-    public subToEvent(subType: Subscription, params: QueryParams) {
+    public subToEvent<T extends keyof Subscription>(subType: T, params: Subscription[T]) {
         switch (subType) {
             case "Channel":
-                if (!hasValidParam(params, "channelId")) return;
-                this.connection.send(`["${this.joinRef}","channel_resp","__absinthe__:control","doc",{"query":"subscription{ channel(id: ${params.channelId}) { stream {countViewers} } }","variables":{} }]`);
+                if (!hasValidParam("channelId", params)) return;
+                type ChannelParam = Subscription["Channel"];
+                this.connection.send(`["${this.joinRef}","channel_resp","__absinthe__:control","doc",{"query":"subscription{ channel(id: ${(<ChannelParam>params)[0].channelId}) { stream {countViewers} } }","variables":{} }]`);
                 break;
 
             case "Chat":
-                if (!hasValidParam(params, "channelId")) return;
-                this.connection.send(`["${this.joinRef}","chat_resp","__absinthe__:control","doc",{"query":"subscription{ chatMessage(channelId: ${params.channelId}) { id, user { username avatarUrl id }, isSubscriptionMessage, message, tokens {...on ChatMessageToken {text} ...on EmoteToken {src} ...on UrlToken {url} ...on TextToken {text}} } }","variables":{} }]`);
+                if (!hasValidParam("channelId", params)) return;
+                type ChatParam = Subscription["Chat"];
+                this.connection.send(`["${this.joinRef}","chat_resp","__absinthe__:control","doc",{"query":"subscription{ chatMessage(channelId: ${(<ChatParam>params)[0].channelId}) { id, user { username avatarUrl id }, isSubscriptionMessage, message, tokens {...on ChatMessageToken {text} ...on EmoteToken {src} ...on UrlToken {url} ...on TextToken {text}} } }","variables":{} }]`);
                 break;
 
             case "Followers":
-                if (!hasValidParam(params, "streamerId")) return;
-                this.connection.send(`["${this.joinRef}","follow_resp","__absinthe__:control","doc",{"query":"subscription{ followers(streamerId: ${params.streamerId}) { user { username } } }","variables":{} }]`);
+                if (!hasValidParam("streamerId", params)) return;
+                type FollowParam = Subscription["Followers"];
+                this.connection.send(`["${this.joinRef}","follow_resp","__absinthe__:control","doc",{"query":"subscription{ followers(streamerId: ${(<FollowParam>params)[0].streamerId}) { user { username } } }","variables":{} }]`);
                 break;
         }
     }

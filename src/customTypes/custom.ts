@@ -22,12 +22,16 @@ export type MutationData = "BanData" | "ChatData" | "DeleteData" |
 /**
  * Which graphQL subscription to target
  */
-export type Subscription = "Chat" | "Followers" | "Channel"
+export type Subscription = {
+    Channel: [ChannelById]
+    Chat : [ChannelById],
+    Followers: [StreamerById],
+}
 
 /**
  * Which mutation to enact
  */
-export interface Mutation {
+export type Mutation = {
     BanUser: [ChannelById, UserById],
     CreateChatMessage: [ChannelById, MessageCreate],
     DeleteChatMessage: [ChannelById, MessageById],
@@ -105,7 +109,7 @@ export interface StreamInfoByTitle {
  * All of the active subscriptions
  */
 export type ActiveSubscriptions = {
-    type: Subscription,
+    type: "Chat" | "Followers" | "Channel",
     id: string
 }
 
