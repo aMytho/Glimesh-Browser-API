@@ -24,8 +24,9 @@ export default defineConfig({
     reportCompressedSize: true,
     lib: {
       entry: path.resolve(__dirname, "src/main.ts"),
-      fileName: "main",
-      formats: ["es", "cjs"],
+      fileName: (format) => `main.${format}.js`,
+      name: "GlimeshAPI",
+      formats: ["es", "umd"],
     },
     rollupOptions: {
       external: [],

@@ -2,17 +2,17 @@
   "name": "glimesh-browser-api",
   "version": "0.0.1",
   "description": "A client library for working with Glimesh.tv",
-  "main": "dist/main.cjs.js",
-  "module": "dist/main.esm.js",
+  "main": "dist/main.umd.js",
+  "module": "dist/main.es.js",
   "types": "dist/main.d.js",
   "exports": {
     ".": {
       "import": "./dist/main.es.js",
-      "require": "./dist/main.cjs.js"
+      "require": "./dist/main.umd.js"
     }
   },
   "scripts": {
-    "build": "npm run build:cjs && npm run build:esm && npm run build:umd && npm run build:types",
+    "build": "npm run clean && vite build",
     "clean": "node tools/cleanup",
     "package": "npm run build && npm pack"
   },
