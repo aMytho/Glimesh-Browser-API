@@ -1,19 +1,20 @@
 {
   "name": "glimesh-browser-api",
-  "version": "0.2.2",
-  "description": "",
-  "main": "dist/cjs/index.js",
-  "module": "dist/esm/index.js",
-  "umd:main": "dist/umd/index.js",
-  "types": "dist/types/index.d.js",
+  "version": "0.0.1",
+  "description": "A client library for working with Glimesh.tv",
+  "main": "dist/main.cjs.js",
+  "module": "dist/main.esm.js",
+  "types": "dist/main.d.js",
+  "exports": {
+    ".": {
+      "import": "./dist/main.es.js",
+      "require": "./dist/main.cjs.js"
+    }
+  },
   "scripts": {
     "build": "npm run build:cjs && npm run build:esm && npm run build:umd && npm run build:types",
-    "build:esm": "node tools/cleanup esm && vite build",
-    "build:umd": "node tools/cleanup umd && vite build",
-    "build:types": "node tools/cleanup types",
     "clean": "node tools/cleanup",
-    "package": "npm run build && npm pack",
-    "addscope": "node tools/packagejson name @tomchen/example-typescript-package"
+    "package": "npm run build && npm pack"
   },
   "publishConfig": {
     "access": "public"
@@ -22,32 +23,31 @@
     "dist"
   ],
   "keywords": [
-    "example",
+    "glimesh",
     "typescript",
-    "npm",
-    "package",
-    "sample",
-    "boilerplate",
-    "starter",
-    "demo",
+    "javascript",
+    "library",
     "cjs",
     "esm",
     "umd"
   ],
-  "author": "Tom Chen <tomchen.org@gmail.com>",
+  "author": "aMytho",
   "license": "MIT",
-  "homepage": "https://github.com/tomchen/example-typescript-package",
+  "homepage": "https://github.com/amytho/glimesh-browser-api",
   "repository": {
     "type": "git",
-    "url": "git@github.com:tomchen/example-typescript-package.git"
+    "url": "git@github.com:amytho/glimesh-browser-api.git"
   },
   "bugs": {
-    "url": "https://github.com/tomchen/example-typescript-package/issues"
+    "url": "https://github.com/amytho/glimesh-browser-api/issues"
   },
   "dependencies": {
     "eventemitter3": "^4.0.7"
   },
   "devDependencies": {
+    "@rollup/plugin-typescript": "^9.0.2",
+    "rollup-plugin-typescript-paths": "^1.4.0",
+    "tslib": "^2.4.1",
     "typescript": "^4.4.3",
     "vite": "^3.1.4"
   }
