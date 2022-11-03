@@ -27,8 +27,79 @@ export type Subscription = "Chat" | "Followers" | "Channel"
 /**
  * Which mutation to enact
  */
-export type Mutation = "BanUser" | "CreateChatMessage" | "DeleteChatMessage" |
-"Follow" | "LongTimeout" | "ShortTimeout" | "UnbanUser" | "Unfollow" | "UpdateStreamInfo"
+export interface Mutation {
+    BanUser: [ChannelById, UserById],
+    CreateChatMessage: [ChannelById, MessageCreate],
+    DeleteChatMessage: [ChannelById, MessageById],
+    Follow: [StreamerById, LiveNotifications],
+    LongTimeout: [ChannelById, UserById],
+    ShortTimeout: [ChannelById, UserById],
+    UnbanUser: [ChannelById, UserById],
+    Unfollow: [StreamerById]
+    UpdateStreamInfo: [ChannelById, StreamInfoByTitle]
+}
+
+/**
+ * Select a user by their ID
+ */
+export interface UserById  {
+    userId: number;
+    username?: never
+}
+/**
+ * Select a user by their username
+ */
+export interface UserByUsername {
+    username: number;
+    userId?: never
+}
+
+/**
+ * Select a channel by ID
+ */
+export interface ChannelById  {
+    channelId: number;
+    username?: never
+}
+/**
+ * Select a channel by username
+ */
+export interface ChannelByUsername {
+    username: number;
+    channelId?: never
+}
+
+/**
+ * Create a message
+ */
+export interface MessageCreate {
+    message: string
+}
+
+/**
+ * Select a message by ID
+ */
+export interface MessageById {
+    messageId: number
+}
+
+/**
+ * Select a streamer by ID (same as user ID)
+ */
+export interface StreamerById {
+    streamerId: number
+}
+
+/**
+ * Enable live notifications?
+ */
+export interface LiveNotifications {
+    enableNotifications: boolean
+}
+
+export interface StreamInfoByTitle {
+    title: string
+}
 
 /**
  * All of the active subscriptions

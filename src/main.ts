@@ -176,41 +176,44 @@ export class GlimeshConnection extends GlimeshParser {
         }
     }
 
-    public createMutation(mutationType: Mutation, params: MutationParams) {
+    public createMutation<T extends keyof Mutation>(mutation: T, params: Mutation[T]) {
         if (!this.usingToken) return;
 
-        switch(mutationType) {
+        switch(mutation) {
             case "BanUser":
-                    this.connection.send(`["${this.joinRef}", "ban_resp", "__absinthe__:control","doc", {"query":"mutation {banUser(channelId:${params.channelId}, userId:${params.userId}) {updatedAt, user {username}}}","variables":{} }]`)
+                    type BanParam = Mutation["BanUser"];
+                    this.connection.send(`["${this.joinRef}", "ban_resp", "__absinthe__:control","doc", {"query":"mutation {banUser(channelId:${(<BanParam>params)[0].channelId}, userId:${(<BanParam>params)[1].userId}) {updatedAt, user {username}}}","variables":{} }]`)
                 break;
                 case "CreateChatMessage":
-                    this.connection.send(`["${this.joinRef}", "chat_resp", "__absinthe__:control","doc", {"query":"mutation {createChatMessage(channelId:${params.channelId}, message: {message: "${params.message}"}) {message, id}}","variables":{} }]`)
+                    type CreateChatParam = Mutation["CreateChatMessage"];
+                    this.connection.send(`["${this.joinRef}", "chat_resp", "__absinthe__:control","doc", {"query":"mutation {createChatMessage(channelId:${(<CreateChatParam>params)[0].channelId}, message: {message: "${(<CreateChatParam>params)[1]}"}) {message, id}}","variables":{} }]`)
                 break;
                 case "DeleteChatMessage":
-                    this.connection.send(`["${this.joinRef}", "delete_resp", "__absinthe__:control","doc", {"query":"mutation {deleteChatMessage(channelId:${params.channelId}, messageId:${params.messageId}) {action, id}}","variables":{} }]`)
+                    type DeleteChatParam = Mutation["DeleteChatMessage"];
+                    this.connection.send(`["${this.joinRef}", "delete_resp", "__absinthe__:control","doc", {"query":"mutation {deleteChatMessage(channelId:${(<DeleteChatParam>params)[0].channelId}, messageId:${(<DeleteChatParam>params)[1].messageId}) {action, id}}","variables":{} }]`)
                 break;
                 case "Follow":
-                    this.connection.send(`["${this.joinRef}", "follow_resp", "__absinthe__:control","doc", {"query":"mutation {follow(liveNotifications:${params.lifeNotifications}, streamerId:${params.streamerId}) {id, streamer {username}}}","variables":{} }]`)
+                    type FollowParam = Mutation["Follow"];
+                    this.connection.send(`["${this.joinRef}", "follow_resp", "__absinthe__:control","doc", {"query":"mutation {follow(liveNotifications:${(<FollowParam>params)[1].enableNotifications}, streamerId:${(<FollowParam>params)[0].streamerId}) {id, streamer {username}}}","variables":{} }]`)
                 break;
                 case "LongTimeout":
-                    this.connection.send(`["${this.joinRef}", "long_timeout_resp", "__absinthe__:control","doc", {"query":"mutation {longTimeoutUser(channelId:${params.channelId}, userId:${params.userId}) {action, id}}","variables":{} }]`)
-                break;
+                    type TimeoutParam = Mutation["LongTimeout"];
+                    this.connection.send(`["${this.joinRef}", "long_timeout_resp", "__absinthe__:control","doc", {"query":"mutation {longTimeoutUser(channelId:${(<TimeoutParam>params)[0].channelId}, userId:${(<TimeoutParam>params)[1].userId}) {action, id}}","variables":{} }]`)
+                    break;
                 case "ShortTimeout":
-                    this.connection.send(`["${this.joinRef}", "short_timeout_resp", "__absinthe__:control","doc", {"query":"mutation {shortTimeoutUser(channelId:${params.channelId}, userId:${params.userId}) {action, id}}","variables":{} }]`)
+                    this.connection.send(`["${this.joinRef}", "short_timeout_resp", "__absinthe__:control","doc", {"query":"mutation {shortTimeoutUser(channelId:${(<TimeoutParam>params)[0].channelId}, userId:${(<TimeoutParam>params)[1].userId}) {action, id}}","variables":{} }]`)
                 break;
                 case "UnbanUser":
-                    this.connection.send(`["${this.joinRef}", "unban_resp", "__absinthe__:control","doc", {"query":"mutation {unbanUser(channelId:${params.channelId}, userId:${params.userId}) {updatedAt, user {username}}}","variables":{} }]`)
+                    this.connection.send(`["${this.joinRef}", "unban_resp", "__absinthe__:control","doc", {"query":"mutation {unbanUser(channelId:${(<BanParam>params)[0].channelId}, userId:${(<BanParam>params)[1].userId}) {updatedAt, user {username}}}","variables":{} }]`)
                 break;
                 case "Unfollow":
-                    this.connection.send(`["${this.joinRef}", "unfollow_resp", "__absinthe__:control","doc", {"query":"mutation {unfollow(streamerId: ${params.streamerId}) {id, streamer {username}}}","variables":{} }]`)
+                    type UnFollowParam = Mutation["Unfollow"];
+                    this.connection.send(`["${this.joinRef}", "unfollow_resp", "__absinthe__:control","doc", {"query":"mutation {unfollow(streamerId: ${(<UnFollowParam>params)[0].streamerId}) {id, streamer {username}}}","variables":{} }]`)
                 break;
                 case "UpdateStreamInfo":
-                    this.connection.send(`["${this.joinRef}", "update_stream_info_resp", "__absinthe__:control","doc", {"query":"mutation {updateStreamInfo(channelId: ${params.channelId}, title: ${params.title}) {id, title}}","variables":{} }]`)
+                    type StreamInfoParam = Mutation["UpdateStreamInfo"];
+                    this.connection.send(`["${this.joinRef}", "update_stream_info_resp", "__absinthe__:control","doc", {"query":"mutation {updateStreamInfo(channelId: ${(<StreamInfoParam>params)[0].channelId}, title: ${(<StreamInfoParam>params)[1].title}) {id, title}}","variables":{} }]`)
                 break;
         }
-    }
-
-    public query() {
-
     }
 }
