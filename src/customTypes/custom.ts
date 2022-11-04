@@ -177,3 +177,15 @@ export type MutationParams = {
  * Params sent to a query/subscription/mutation
  */
 export type ParamName = "streamerId" | "userId" | "channelId"
+
+//Params for graphql
+export type ChannelParam = Subscription["Channel"];
+export type ChatParam = Subscription["Chat"];
+export type FollowParam = Subscription["Followers"];
+export type BanParam = Mutation["BanUser"];
+export type CreateChatParam = Mutation["CreateChatMessage"];
+export type DeleteChatParam = Mutation["DeleteChatMessage"];
+export type FollowParamM = Mutation["Follow"];
+export type TimeoutParam = Mutation["LongTimeout"];
+export type UnFollowParam = Mutation["Unfollow"];
+export type StreamInfoParam = Mutation["UpdateStreamInfo"];
