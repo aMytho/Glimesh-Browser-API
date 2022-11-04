@@ -157,7 +157,7 @@ export interface Channel {
     /**
      * List of moderators in the channel
      */
-    moderators: ChannelModerator
+    moderators: ChannelModerator[]
     /**
      * Channel poster URL
      */

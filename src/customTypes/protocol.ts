@@ -8,12 +8,12 @@ export type Ref = "heartbeat_resp" | "open_resp" | "channel_resp" | "follow_resp
 /**
  * Topic type
  */
-export type Topic = "__absinthe__:control" | "phoenix" | "doc"
+export type Topic = "__absinthe__:control" | "phoenix"
 
 /**
  * An event sent from or to the glimesh API.
  */
-export type Event = "phx_close" | "phx_error" | "phx_join" | "phx_reply" | "phx_leave" |
+export type Event = "doc" | "phx_close" | "phx_error" | "phx_join" | "phx_reply" | "phx_leave" |
 "heartbeat" | "subscription:data"
 
 /**
@@ -62,11 +62,11 @@ export type ApiRequest = [
      * Topic.
      * Use "__absinthe__:control" for opening a connection
      * Use "phoenix" for heartbeats
-     * Use "doc" for anything graphql related
      */
     Topic,
     /**
      * Event
+     * Use "doc" for anything graphql related
      */
     Event,
     /**
