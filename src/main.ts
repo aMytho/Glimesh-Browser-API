@@ -1,9 +1,14 @@
 import * as Constants from "./constants"
 import EventEmitter from "eventemitter3"
-import { EventName, Mutation, MutationParams, QueryParams, Subscription } from "./customTypes/custom"
+import { BanParam, ChannelParam, ChatParam,
+    CreateChatParam, DeleteChatParam, EventName,
+    FollowParam, FollowParamM, Mutation,
+    StreamInfoParam, Subscription, TimeoutParam,
+    UnFollowParam } from "./customTypes/custom"
 import { GlimeshParser } from "./parse"
 import { hasValidParam } from "./util/util"
 import { ApiRequest } from "./customTypes/protocol"
+import { Builder } from "./builder"
 
 /**
  * The class that lets you talk with the API
@@ -37,6 +42,10 @@ export class GlimeshConnection extends GlimeshParser {
      * Unique ID to join Glimesh as
      */
     private joinRef = "glimeshBrowserAPI"
+    /**
+     * Used to build glimesh payloads
+     */
+    private builder = new Builder(this.joinRef);
 
     constructor(authInfo: {
         clientId?: string,
@@ -45,7 +54,7 @@ export class GlimeshConnection extends GlimeshParser {
     ) {
         super();
         this.clientId = authInfo.clientId;
-        this.accessToken = authInfo.accessToken
+        this.accessToken = authInfo.accessToken;
     }
 
     /**
@@ -114,7 +123,6 @@ export class GlimeshConnection extends GlimeshParser {
         console.log(message)
         let eventToEmit = this.parseData(message.data);
         console.log(eventToEmit)
-        // TODO check if event is needed to be emmitted
         this.events.emit(eventToEmit.type, eventToEmit.data);
     }
 
@@ -156,66 +164,108 @@ export class GlimeshConnection extends GlimeshParser {
      * Subscribe to a graphql subscription
      * @param subType The event to subscribe to. Corresponds to a graphql subscription
      * @param params The entity to target. See API to know which params to use.
+     * @param retVal The graphql data to request when the event happens.
      */
-    public subToEvent<T extends keyof Subscription>(subType: T, params: Subscription[T]) {
+    public subToEvent<T extends keyof Subscription>(subType: T, params: Subscription[T], retVal: string = "") {
         switch (subType) {
             case "Channel":
                 if (!hasValidParam("channelId", params)) return;
-                type ChannelParam = Subscription["Channel"];
-                this.connection.send(`["${this.joinRef}","channel_resp","__absinthe__:control","doc",{"query":"subscription{ channel(id: ${(<ChannelParam>params)[0].channelId}) { stream {countViewers} } }","variables":{} }]`);
+
+                let channelPayload = this.builder.buildSubscription("channel_resp",
+                    `channel(id: ${(<ChannelParam>params)[0].channelId})`,
+                    retVal || `stream {countViewers}, title`
+                );
+                this.connection.send(channelPayload);
                 break;
 
             case "Chat":
                 if (!hasValidParam("channelId", params)) return;
-                type ChatParam = Subscription["Chat"];
-                this.connection.send(`["${this.joinRef}","chat_resp","__absinthe__:control","doc",{"query":"subscription{ chatMessage(channelId: ${(<ChatParam>params)[0].channelId}) { id, user { username avatarUrl id }, isSubscriptionMessage, message, tokens {...on ChatMessageToken {text} ...on EmoteToken {src} ...on UrlToken {url} ...on TextToken {text}} } }","variables":{} }]`);
+
+                let chatPayload = this.builder.buildSubscription("chat_resp",
+                    `chatMessage(channelId: ${(<ChatParam>params)[0].channelId})`,
+                    retVal || `id, user { username avatarUrl id }, isSubscriptionMessage, message, ${Constants.MESSAGE_TOKENS}`
+                );
+                this.connection.send(chatPayload);
                 break;
 
             case "Followers":
                 if (!hasValidParam("streamerId", params)) return;
-                type FollowParam = Subscription["Followers"];
-                this.connection.send(`["${this.joinRef}","follow_resp","__absinthe__:control","doc",{"query":"subscription{ followers(streamerId: ${(<FollowParam>params)[0].streamerId}) { user { username } } }","variables":{} }]`);
+
+                let followPayload = this.builder.buildSubscription("follow_resp",
+                    `followers(streamerId: ${(<FollowParam>params)[0].streamerId})`,
+                    retVal || `user { username }`
+                );
+                this.connection.send(followPayload);
                 break;
         }
     }
 
-    public createMutation<T extends keyof Mutation>(mutation: T, params: Mutation[T]) {
+    public createMutation<T extends keyof Mutation>(mutation: T, params: Mutation[T], retVal: string = "") {
         if (!this.usingToken) return;
 
-        switch(mutation) {
+        switch (mutation) {
             case "BanUser":
-                    type BanParam = Mutation["BanUser"];
-                    this.connection.send(`["${this.joinRef}", "ban_resp", "__absinthe__:control","doc", {"query":"mutation {banUser(channelId:${(<BanParam>params)[0].channelId}, userId:${(<BanParam>params)[1].userId}) {updatedAt, user {username}}}","variables":{} }]`)
+                let banPayload = this.builder.buildMutation("ban_resp",
+                    `banUser(channelId:${(<BanParam>params)[0].channelId}, userId:${(<BanParam>params)[1].userId})`,
+                    retVal || `updatedAt, user {username}`
+                );
+                this.connection.send(JSON.stringify(banPayload));
                 break;
-                case "CreateChatMessage":
-                    type CreateChatParam = Mutation["CreateChatMessage"];
-                    this.connection.send(`["${this.joinRef}", "chat_resp", "__absinthe__:control","doc", {"query":"mutation {createChatMessage(channelId:${(<CreateChatParam>params)[0].channelId}, message: {message: "${(<CreateChatParam>params)[1]}"}) {message, id}}","variables":{} }]`)
+            case "CreateChatMessage":
+                let createChatPayload = this.builder.buildMutation("chat_resp",
+                    `createChatMessage(channelId:${(<CreateChatParam>params)[0].channelId}, message: {message: "${(<CreateChatParam>params)[1]}"})`,
+                    retVal || `message, id`
+                );
+                this.connection.send(JSON.stringify(createChatPayload));
                 break;
-                case "DeleteChatMessage":
-                    type DeleteChatParam = Mutation["DeleteChatMessage"];
-                    this.connection.send(`["${this.joinRef}", "delete_resp", "__absinthe__:control","doc", {"query":"mutation {deleteChatMessage(channelId:${(<DeleteChatParam>params)[0].channelId}, messageId:${(<DeleteChatParam>params)[1].messageId}) {action, id}}","variables":{} }]`)
+            case "DeleteChatMessage":
+                let deleteChatPayload = this.builder.buildMutation("delete_resp",
+                    `deleteChatMessage(channelId:${(<DeleteChatParam>params)[0].channelId}, messageId:${(<DeleteChatParam>params)[1].messageId})`,
+                    retVal || `action, id`
+                );
+                this.connection.send(JSON.stringify(deleteChatPayload));
                 break;
-                case "Follow":
-                    type FollowParam = Mutation["Follow"];
-                    this.connection.send(`["${this.joinRef}", "follow_resp", "__absinthe__:control","doc", {"query":"mutation {follow(liveNotifications:${(<FollowParam>params)[1].enableNotifications}, streamerId:${(<FollowParam>params)[0].streamerId}) {id, streamer {username}}}","variables":{} }]`)
+            case "Follow":
+                let followPayload = this.builder.buildMutation("follow_resp",
+                    `follow(liveNotifications:${(<FollowParamM>params)[1].enableNotifications}, streamerId:${(<FollowParam>params)[0].streamerId})`,
+                    retVal || `id, streamer {username}`
+                );
+                this.connection.send(JSON.stringify(followPayload));
                 break;
-                case "LongTimeout":
-                    type TimeoutParam = Mutation["LongTimeout"];
-                    this.connection.send(`["${this.joinRef}", "long_timeout_resp", "__absinthe__:control","doc", {"query":"mutation {longTimeoutUser(channelId:${(<TimeoutParam>params)[0].channelId}, userId:${(<TimeoutParam>params)[1].userId}) {action, id}}","variables":{} }]`)
-                    break;
-                case "ShortTimeout":
-                    this.connection.send(`["${this.joinRef}", "short_timeout_resp", "__absinthe__:control","doc", {"query":"mutation {shortTimeoutUser(channelId:${(<TimeoutParam>params)[0].channelId}, userId:${(<TimeoutParam>params)[1].userId}) {action, id}}","variables":{} }]`)
+            case "LongTimeout":
+                let longTimeoutPayload = this.builder.buildMutation("long_timeout_resp",
+                    `longTimeoutUser(channelId:${(<TimeoutParam>params)[0].channelId}, userId:${(<TimeoutParam>params)[1].userId})`,
+                    retVal || `action, id`
+                );
+                this.connection.send(JSON.stringify(longTimeoutPayload));
                 break;
-                case "UnbanUser":
-                    this.connection.send(`["${this.joinRef}", "unban_resp", "__absinthe__:control","doc", {"query":"mutation {unbanUser(channelId:${(<BanParam>params)[0].channelId}, userId:${(<BanParam>params)[1].userId}) {updatedAt, user {username}}}","variables":{} }]`)
+            case "ShortTimeout":
+                let shortTimeoutPayload = this.builder.buildMutation("short_timeout_resp",
+                    `shortTimeoutUser(channelId:${(<TimeoutParam>params)[0].channelId}, userId:${(<TimeoutParam>params)[1].userId})`,
+                    retVal || `action, id`
+                );
+                this.connection.send(JSON.stringify(shortTimeoutPayload));
                 break;
-                case "Unfollow":
-                    type UnFollowParam = Mutation["Unfollow"];
-                    this.connection.send(`["${this.joinRef}", "unfollow_resp", "__absinthe__:control","doc", {"query":"mutation {unfollow(streamerId: ${(<UnFollowParam>params)[0].streamerId}) {id, streamer {username}}}","variables":{} }]`)
+            case "UnbanUser":
+                let unBanPayload = this.builder.buildMutation("unban_resp",
+                    `unbanUser(channelId:${(<BanParam>params)[0].channelId}, userId:${(<BanParam>params)[1].userId})`,
+                    retVal || `updatedAt, user {username}`
+                );
+                this.connection.send(JSON.stringify(unBanPayload));
                 break;
-                case "UpdateStreamInfo":
-                    type StreamInfoParam = Mutation["UpdateStreamInfo"];
-                    this.connection.send(`["${this.joinRef}", "update_stream_info_resp", "__absinthe__:control","doc", {"query":"mutation {updateStreamInfo(channelId: ${(<StreamInfoParam>params)[0].channelId}, title: ${(<StreamInfoParam>params)[1].title}) {id, title}}","variables":{} }]`)
+            case "Unfollow":
+                let unFollowPayload = this.builder.buildMutation("unfollow_resp",
+                    `unfollow(streamerId: ${(<UnFollowParam>params)[0].streamerId})`,
+                    retVal || `id, streamer {username}`
+                );
+                this.connection.send(JSON.stringify(unFollowPayload));
+                break;
+            case "UpdateStreamInfo":
+                let updateStreamPayload = this.builder.buildMutation("update_stream_info_resp",
+                    `updateStreamInfo(channelId: ${(<StreamInfoParam>params)[0].channelId}, title: "${(<StreamInfoParam>params)[1].title}")`,
+                    retVal || `id, title`
+                );
+                this.connection.send(JSON.stringify(updateStreamPayload));
                 break;
         }
     }
