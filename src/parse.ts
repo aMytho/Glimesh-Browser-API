@@ -35,28 +35,28 @@ export class GlimeshParser {
                 return {type: "ChatReady", data: null}
             case "follow_resp":
                 this.subscriptions.push({type: "Followers", id: parsedData[4].response.subscriptionId})
-                return {type: "FollowReady", data: null}
+                return {type: "FollowReady", data: parsedData[4].response.data}
             case "ban_resp":
-                return {type: "BanData", data: null}
+                return {type: "BanData", data: parsedData[4].response.data}
             case "delete_resp":
-                return {type: "DeleteData", data: null}
+                return {type: "DeleteData", data: parsedData[4].response.data}
             case "long_timeout_resp":
-                return {type: "LongTimeoutData", data: null}
+                return {type: "LongTimeoutData", data: parsedData[4].response.data}
             case "short_timeout_resp":
-                return {type: "ShortTimeoutData", data: null}
+                return {type: "ShortTimeoutData", data: parsedData[4].response.data}
             case "unban_resp":
-                return {type: "UnbanData", data: null}
+                return {type: "UnbanData", data: parsedData[4].response.data}
             case "unfollow_resp":
-                return {type: "UnFollowData", data: null}
+                return {type: "UnFollowData", data: parsedData[4].response.data}
             case "update_stream_info_resp":
-                return {type: "UpdateStreamInfoData", data: null}
+                return {type: "UpdateStreamInfoData", data: parsedData[4].response.data}
             default: return this.handleData(parsedData)
         }
     }
 
     private checkErrors(data: any) {
-        console.log(data);
         if (data.response && data.response.errors != undefined && data.response.errors.length > 0) {
+            console.error(data);
             return true
         }
         return false
@@ -78,7 +78,6 @@ export class GlimeshParser {
         // If it is we determine the type and send the related data
         for (const subscription of this.subscriptions) {
             if (data[2].includes(subscription.id)) {
-                console.log(true)
                 switch(subscription.type) {
                     case "Channel": return {type: "ChannelData", data: data[4].result.data}
                     case "Chat": return {type: "ChatData", data: data[4].result.data}
