@@ -1,7 +1,7 @@
 {
   "name": "glimesh-browser-api",
-  "version": "0.0.1",
-  "description": "A client library for working with Glimesh.tv",
+  "version": "0.0.2",
+  "description": "A client library for working with Glimesh.tv in the browser",
   "main": "dist/main.umd.js",
   "module": "dist/main.es.js",
   "types": "dist/main.d.js",
@@ -27,7 +27,6 @@
     "typescript",
     "javascript",
     "library",
-    "cjs",
     "esm",
     "umd"
   ],
