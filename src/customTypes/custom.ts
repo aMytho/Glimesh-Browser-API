@@ -44,6 +44,25 @@ export type Mutation = {
 }
 
 /**
+ * Which query to perform
+ */
+export type Query = {
+    Categories: [],
+    Category: [SlugByName],
+    Channel: [ID | StreamerById | StreamerByUsername],
+    Channels: [
+        SlugByName | StatusByState | null,
+        PaginationAfter | PaginationBefore | null,
+        PaginationLast | PaginationFirst | null
+    ],
+    Followers: [StreamerById | UserById],
+    HomepageChannels: [],
+    Myself: [],
+    User: [ID | UserByUsername],
+    Users: []
+}
+
+/**
  * Select a user by their ID
  */
 export interface UserById  {
@@ -69,8 +88,16 @@ export interface ChannelById  {
  * Select a channel by username
  */
 export interface ChannelByUsername {
-    username: number;
+    username: string;
     channelId?: never
+}
+
+export interface StreamerByUsername {
+    streamerUsername: string;
+}
+
+export interface ID {
+    id: number;
 }
 
 /**
@@ -104,6 +131,40 @@ export interface LiveNotifications {
 export interface StreamInfoByTitle {
     title: string
 }
+
+export interface SlugByName {
+    name: string
+}
+
+export interface CategoryBySlug {
+    name: string
+}
+
+export interface StatusByState {
+    status: "LIVE" | "OFFLINE"
+}
+
+export interface PaginationFirst {
+    first: number
+    last?: never
+}
+
+export interface PaginationLast {
+    last: number;
+    first?: never;
+}
+
+export interface PaginationBefore {
+    before: string;
+    after?: never;
+}
+
+export interface PaginationAfter {
+    after: string;
+    before?: never;
+}
+
+
 
 /**
  * All of the active subscriptions
@@ -176,7 +237,9 @@ export type MutationParams = {
 /**
  * Params sent to a query/subscription/mutation
  */
-export type ParamName = "streamerId" | "userId" | "channelId"
+export type ParamName = "streamerId" | "userId" | "channelId" | "message" |
+"messageId" | "streamerId" | "enableNotifications" | "title" | "username" | "id" |
+"streamerUsername"
 
 //Params for graphql
 export type ChannelParam = Subscription["Channel"];
@@ -189,3 +252,9 @@ export type FollowParamM = Mutation["Follow"];
 export type TimeoutParam = Mutation["LongTimeout"];
 export type UnFollowParam = Mutation["Unfollow"];
 export type StreamInfoParam = Mutation["UpdateStreamInfo"];
+export type CategoryParam = Query["Category"];
+
+export type PickParam = {
+    param: ParamName,
+    val: any
+}

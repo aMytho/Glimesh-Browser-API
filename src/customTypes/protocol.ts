@@ -3,7 +3,13 @@
  */
 export type Ref = "heartbeat_resp" | "open_resp" | "channel_resp" | "follow_resp" | "chat_resp" |
 "ban_resp" | "chat_resp" | "delete_resp" | "follow_resp" | "long_timeout_resp" | "short_timeout_resp"|
-"unban_resp" | "unfollow_resp" | "update_stream_info_resp"
+"unban_resp" | "unfollow_resp" | "update_stream_info_resp" | QueryRef
+
+/**
+ * Query refs
+ */
+type QueryRef = "categories_resp" | "category_resp" | "channelQ_resp" | "followers_resp" |
+"homepage_channels_resp" | "myself_resp" | "user_resp" | "users_resp"
 
 /**
  * Topic type
