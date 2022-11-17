@@ -65,7 +65,7 @@ connection.getEvents().emit("customData", "mmm very custom");
 > Emitting a custom event with custom data
 
 
-The libary has type defs for all of the built in mutations and subscriptions. Queryies are not yet supported.
+The libary has type defs for all of the built in mutations, subscriptions, and queries. Note that only non paginated queries are supported. They will be added in a future version.
 
 ## Websocket
 
