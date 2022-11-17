@@ -1,12 +1,13 @@
 import * as Constants from "./constants"
 import EventEmitter from "eventemitter3"
-import { BanParam, ChannelParam, ChatParam,
+import { BanParam, CategoryParam, ChannelParam, ChatParam,
     CreateChatParam, DeleteChatParam, EventName,
     FollowParam, FollowParamM, Mutation,
+    Query,
     StreamInfoParam, Subscription, TimeoutParam,
     UnFollowParam } from "./customTypes/custom"
 import { GlimeshParser } from "./parse"
-import { hasValidParam } from "./util/util"
+import { hasValidParam, hasValidParams, pickParam } from "./util/util"
 import { ApiRequest } from "./customTypes/protocol"
 import { Builder } from "./builder"
 
@@ -176,17 +177,17 @@ export class GlimeshConnection extends GlimeshParser {
                     retVal || `stream {countViewers}, title`
                 );
                 this.connection.send(channelPayload);
-                break;
+            break;
 
             case "Chat":
-                if (!hasValidParam("channelId", params)) return;
+                //if (!hasValidParam("channelId", params)) return;
 
                 let chatPayload = this.builder.buildSubscription("chat_resp",
                     `chatMessage(channelId: ${(<ChatParam>params)[0].channelId})`,
                     retVal || `id, user { username avatarUrl id }, isSubscriptionMessage, message, ${Constants.MESSAGE_TOKENS}`
                 );
                 this.connection.send(chatPayload);
-                break;
+            break;
 
             case "Followers":
                 if (!hasValidParam("streamerId", params)) return;
@@ -196,7 +197,7 @@ export class GlimeshConnection extends GlimeshParser {
                     retVal || `user { username }`
                 );
                 this.connection.send(followPayload);
-                break;
+            break;
         }
     }
 
@@ -205,68 +206,145 @@ export class GlimeshConnection extends GlimeshParser {
 
         switch (mutation) {
             case "BanUser":
+                if (!hasValidParams(["channelId", "userId"], params, [0, 1])) return;
+
                 let banPayload = this.builder.buildMutation("ban_resp",
                     `banUser(channelId:${(<BanParam>params)[0].channelId}, userId:${(<BanParam>params)[1].userId})`,
                     retVal || `updatedAt, user {username}`
                 );
-                this.connection.send(JSON.stringify(banPayload));
-                break;
+                this.connection.send(banPayload);
+            break;
             case "CreateChatMessage":
+                if (!hasValidParams(["channelId", "message"], params, [0, 1])) return;
+
                 let createChatPayload = this.builder.buildMutation("chat_resp",
-                    `createChatMessage(channelId:${(<CreateChatParam>params)[0].channelId}, message: {message: "${(<CreateChatParam>params)[1]}"})`,
+                    `createChatMessage(channelId:${(<CreateChatParam>params)[0].channelId}, message: {message: "${(<CreateChatParam>params)[1].message}"})`,
                     retVal || `message, id`
                 );
-                this.connection.send(JSON.stringify(createChatPayload));
-                break;
+                this.connection.send(createChatPayload);
+            break;
             case "DeleteChatMessage":
+                if (!hasValidParams(["channelId", "messageId"], params, [0, 1])) return;
+
                 let deleteChatPayload = this.builder.buildMutation("delete_resp",
                     `deleteChatMessage(channelId:${(<DeleteChatParam>params)[0].channelId}, messageId:${(<DeleteChatParam>params)[1].messageId})`,
                     retVal || `action, id`
                 );
-                this.connection.send(JSON.stringify(deleteChatPayload));
-                break;
+                this.connection.send(deleteChatPayload);
+            break;
             case "Follow":
+                if (!hasValidParams(["streamerId", "enableNotifications"], params, [0, 1])) return;
+
                 let followPayload = this.builder.buildMutation("follow_resp",
                     `follow(liveNotifications:${(<FollowParamM>params)[1].enableNotifications}, streamerId:${(<FollowParam>params)[0].streamerId})`,
                     retVal || `id, streamer {username}`
                 );
-                this.connection.send(JSON.stringify(followPayload));
-                break;
+                this.connection.send(followPayload);
+            break;
             case "LongTimeout":
+                if (!hasValidParams(["channelId", "userId"], params, [0, 1])) return;
+
                 let longTimeoutPayload = this.builder.buildMutation("long_timeout_resp",
                     `longTimeoutUser(channelId:${(<TimeoutParam>params)[0].channelId}, userId:${(<TimeoutParam>params)[1].userId})`,
                     retVal || `action, id`
                 );
-                this.connection.send(JSON.stringify(longTimeoutPayload));
-                break;
+                this.connection.send(longTimeoutPayload);
+            break;
             case "ShortTimeout":
+                if (!hasValidParams(["channelId", "userId"], params, [0, 1])) return;
+
                 let shortTimeoutPayload = this.builder.buildMutation("short_timeout_resp",
                     `shortTimeoutUser(channelId:${(<TimeoutParam>params)[0].channelId}, userId:${(<TimeoutParam>params)[1].userId})`,
                     retVal || `action, id`
                 );
-                this.connection.send(JSON.stringify(shortTimeoutPayload));
-                break;
+                this.connection.send(shortTimeoutPayload);
+            break;
             case "UnbanUser":
+                if (!hasValidParams(["channelId", "userId"], params, [0, 1])) return;
+
                 let unBanPayload = this.builder.buildMutation("unban_resp",
                     `unbanUser(channelId:${(<BanParam>params)[0].channelId}, userId:${(<BanParam>params)[1].userId})`,
                     retVal || `updatedAt, user {username}`
                 );
-                this.connection.send(JSON.stringify(unBanPayload));
-                break;
+                this.connection.send(unBanPayload);
+            break;
             case "Unfollow":
+                if (!hasValidParams(["streamerId"], params, [0])) return;
+
                 let unFollowPayload = this.builder.buildMutation("unfollow_resp",
                     `unfollow(streamerId: ${(<UnFollowParam>params)[0].streamerId})`,
                     retVal || `id, streamer {username}`
                 );
-                this.connection.send(JSON.stringify(unFollowPayload));
-                break;
+                this.connection.send(unFollowPayload);
+            break;
             case "UpdateStreamInfo":
+                if (!hasValidParams(["channelId", "title"], params, [0, 1])) return;
+
                 let updateStreamPayload = this.builder.buildMutation("update_stream_info_resp",
                     `updateStreamInfo(channelId: ${(<StreamInfoParam>params)[0].channelId}, title: "${(<StreamInfoParam>params)[1].title}")`,
                     retVal || `id, title`
                 );
-                this.connection.send(JSON.stringify(updateStreamPayload));
-                break;
+                this.connection.send(updateStreamPayload);
+            break;
+        }
+    }
+
+    public createQuery<T extends keyof Query>(query: T, params: Query[T], retVal: string = "") {
+        if (query == "Myself" && !this.usingToken) return;
+
+        switch (query) {
+            case "Categories":
+                let categoriesPayload = this.builder.buildQuery("categories_resp",
+                    `categories`, retVal || `id, name, slug`
+                );
+                this.connection.send(categoriesPayload);
+            break;
+            case "Category":
+                let categoryPayload = this.builder.buildQuery("category_resp",
+                    `category(slug: "${(<CategoryParam>params)[0].name}")`, retVal || "id, name, slug"
+                );
+                this.connection.send(categoryPayload);
+            break;
+            case "Channel":
+                let channelParamSet = pickParam(["id", "streamerUsername", "streamerId"], params,);
+                if (channelParamSet == null) return;
+
+                let channelPayload = this.builder.buildQuery("channelQ_resp",
+                    `channel(${channelParamSet.param}: ${channelParamSet.val})`,
+                    retVal || "id, title"
+                );
+                this.connection.send(channelPayload)
+            break;
+            case "Channels":
+                return;
+            break;
+            case "Followers":
+            return;
+            break;
+            case "HomepageChannels":
+                let homePagePayload = this.builder.buildQuery("homepage_channels_resp",
+                    `homepageChannels`, retVal || "edges {node {id, title, matureContent, streamer {username}}}"
+                );
+                this.connection.send(homePagePayload);
+            break;
+            case "Myself":
+                let myselfPayload = this.builder.buildQuery("myself_resp",
+                    `myself`, retVal || "id, username"
+                );    
+                this.connection.send(myselfPayload);
+            break;
+            case "User":
+                let userParamSet = pickParam(["id", "username"], params,);
+                if (userParamSet == null) return;
+
+                let userPayload = this.builder.buildQuery("user_resp",
+                    `user(${userParamSet.param}: ${userParamSet.val})`, retVal || "id, username"
+                );
+                this.connection.send(userPayload);
+            break;
+            case "Users":
+            return;
+            break;
         }
     }
 }

@@ -1,4 +1,4 @@
-import { ApiRequest, Event, Ref, Topic } from "./customTypes/protocol";
+import { ApiRequest, ApiResponse, Event, Ref, Topic } from "./customTypes/protocol";
 
 /**
  * Assists in building Glimesh payloads
@@ -34,7 +34,27 @@ export class Builder {
         return JSON.stringify(response);
     }
 
-    buildQuery() {}
+    /**
+     * Builds a query
+     * @param ref The ref to receive in reply when the query is returned
+     * @param graphql The graphql query
+     * @param retVal The graphql data on the object you want returned
+     */
+    buildQuery(ref: Ref, graphql: any, retVal: string = "") {
+        let graphqlFormat = {
+            query: `query {${graphql} {${retVal}}}`
+        };
+
+        let response: ApiRequest = [
+            this.joinRef,
+            ref,
+            "__absinthe__:control",
+            "doc",
+            graphqlFormat
+        ];
+
+        return JSON.stringify(response);
+    }
 
 
     /**
@@ -43,7 +63,7 @@ export class Builder {
      * @param graphql The graphql mutation
      * @param retVal The graphql data on the object that you want returned
      */
-    buildMutation(ref: Ref, graphql: any, retVal: string = ""): ApiRequest {
+    buildMutation(ref: Ref, graphql: any, retVal: string = ""): string {
         let graphqlFormat = {
             query: `mutation {${graphql} {${retVal}} }`
         }
@@ -55,7 +75,7 @@ export class Builder {
             "doc",
             graphqlFormat
         ];
-        console.log(response)
-        return response;
+        
+        return JSON.stringify(response);
     }
 }
