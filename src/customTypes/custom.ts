@@ -52,14 +52,21 @@ export type Query = {
     Channel: [ID | StreamerById | StreamerByUsername],
     Channels: [
         SlugByName | StatusByState | null,
-        PaginationAfter | PaginationBefore | null,
-        PaginationLast | PaginationFirst | null
+        PaginationLast | PaginationFirst | null,
+        PaginationAfter | PaginationBefore | null
     ],
-    Followers: [StreamerById | UserById],
+    Followers: [
+        StreamerById | UserById,
+        PaginationFirst | PaginationLast | null,
+        PaginationAfter | PaginationBefore | null
+    ],
     HomepageChannels: [],
     Myself: [],
     User: [ID | UserByUsername],
-    Users: []
+    Users: [
+        PaginationFirst | PaginationLast | null,
+        PaginationAfter | PaginationBefore | null
+    ]
 }
 
 /**
@@ -239,7 +246,7 @@ export type MutationParams = {
  */
 export type ParamName = "streamerId" | "userId" | "channelId" | "message" |
 "messageId" | "streamerId" | "enableNotifications" | "title" | "username" | "id" |
-"streamerUsername"
+"streamerUsername" | "first" | "last" | "before" | "after" | "categorySlug" | "status"
 
 //Params for graphql
 export type ChannelParam = Subscription["Channel"];

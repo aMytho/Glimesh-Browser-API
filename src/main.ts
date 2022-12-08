@@ -7,7 +7,7 @@ import { BanParam, CategoryParam, ChannelParam, ChatParam,
     StreamInfoParam, Subscription, TimeoutParam,
     UnFollowParam } from "./customTypes/custom"
 import { GlimeshParser } from "./parse"
-import { hasValidParam, hasValidParams, pickParam } from "./util/util"
+import { combineParams, hasValidParam, hasValidParams, pickParam } from "./util/util"
 import { ApiRequest } from "./customTypes/protocol"
 import { Builder } from "./builder"
 
@@ -121,9 +121,9 @@ export class GlimeshConnection extends GlimeshParser {
      * @param message The data from Glimesh
      */
     private onMessage(message: any) {
-        console.log(message)
+        console.log(message);
         let eventToEmit = this.parseData(message.data);
-        console.log(eventToEmit)
+        console.log(eventToEmit);
         this.events.emit(eventToEmit.type, eventToEmit.data);
     }
 
@@ -201,12 +201,25 @@ export class GlimeshConnection extends GlimeshParser {
         }
     }
 
-    public createMutation<T extends keyof Mutation>(mutation: T, params: Mutation[T], retVal: string = "") {
-        if (!this.usingToken) return;
+    public createMutation<T extends keyof Mutation>(mutation: T, params: Mutation[T], retVal: string = ""): Promise<any> {
+        if (!this.usingToken) return new Promise((resolve, reject) => reject("Client-id not valid for a mutation"));
+
+        let mutationResult = new Promise((resolve, reject) => {
+            //if we don't get it in 7 seconds an error was probably returned
+            let tim = setTimeout(() => {
+                reject("Timeout or Error");
+            }, 7000);
+            
+            //Setup the listener
+            this.events.once("InternalMutation" as EventName, (data) => {
+                clearTimeout(tim)
+                resolve(data);
+            });
+        })
 
         switch (mutation) {
             case "BanUser":
-                if (!hasValidParams(["channelId", "userId"], params, [0, 1])) return;
+                if (!hasValidParams(["channelId", "userId"], params, [0, 1])) return new Promise((resolve, reject) => reject("Missing Param"));
 
                 let banPayload = this.builder.buildMutation("ban_resp",
                     `banUser(channelId:${(<BanParam>params)[0].channelId}, userId:${(<BanParam>params)[1].userId})`,
@@ -215,7 +228,7 @@ export class GlimeshConnection extends GlimeshParser {
                 this.connection.send(banPayload);
             break;
             case "CreateChatMessage":
-                if (!hasValidParams(["channelId", "message"], params, [0, 1])) return;
+                if (!hasValidParams(["channelId", "message"], params, [0, 1])) return new Promise((resolve, reject) => reject("Missing Param"));
 
                 let createChatPayload = this.builder.buildMutation("chat_resp",
                     `createChatMessage(channelId:${(<CreateChatParam>params)[0].channelId}, message: {message: "${(<CreateChatParam>params)[1].message}"})`,
@@ -224,7 +237,7 @@ export class GlimeshConnection extends GlimeshParser {
                 this.connection.send(createChatPayload);
             break;
             case "DeleteChatMessage":
-                if (!hasValidParams(["channelId", "messageId"], params, [0, 1])) return;
+                if (!hasValidParams(["channelId", "messageId"], params, [0, 1])) return new Promise((resolve, reject) => reject("Missing Param"));
 
                 let deleteChatPayload = this.builder.buildMutation("delete_resp",
                     `deleteChatMessage(channelId:${(<DeleteChatParam>params)[0].channelId}, messageId:${(<DeleteChatParam>params)[1].messageId})`,
@@ -233,7 +246,7 @@ export class GlimeshConnection extends GlimeshParser {
                 this.connection.send(deleteChatPayload);
             break;
             case "Follow":
-                if (!hasValidParams(["streamerId", "enableNotifications"], params, [0, 1])) return;
+                if (!hasValidParams(["streamerId", "enableNotifications"], params, [0, 1])) return new Promise((resolve, reject) => reject("Missing Param"));
 
                 let followPayload = this.builder.buildMutation("follow_resp",
                     `follow(liveNotifications:${(<FollowParamM>params)[1].enableNotifications}, streamerId:${(<FollowParam>params)[0].streamerId})`,
@@ -242,7 +255,7 @@ export class GlimeshConnection extends GlimeshParser {
                 this.connection.send(followPayload);
             break;
             case "LongTimeout":
-                if (!hasValidParams(["channelId", "userId"], params, [0, 1])) return;
+                if (!hasValidParams(["channelId", "userId"], params, [0, 1])) return new Promise((resolve, reject) => reject("Missing Param"));
 
                 let longTimeoutPayload = this.builder.buildMutation("long_timeout_resp",
                     `longTimeoutUser(channelId:${(<TimeoutParam>params)[0].channelId}, userId:${(<TimeoutParam>params)[1].userId})`,
@@ -251,8 +264,7 @@ export class GlimeshConnection extends GlimeshParser {
                 this.connection.send(longTimeoutPayload);
             break;
             case "ShortTimeout":
-                if (!hasValidParams(["channelId", "userId"], params, [0, 1])) return;
-
+                if (!hasValidParams(["channelId", "userId"], params, [0, 1])) return new Promise((resolve, reject) => reject("Missing Param"));
                 let shortTimeoutPayload = this.builder.buildMutation("short_timeout_resp",
                     `shortTimeoutUser(channelId:${(<TimeoutParam>params)[0].channelId}, userId:${(<TimeoutParam>params)[1].userId})`,
                     retVal || `action, id`
@@ -260,7 +272,7 @@ export class GlimeshConnection extends GlimeshParser {
                 this.connection.send(shortTimeoutPayload);
             break;
             case "UnbanUser":
-                if (!hasValidParams(["channelId", "userId"], params, [0, 1])) return;
+                if (!hasValidParams(["channelId", "userId"], params, [0, 1])) return new Promise((resolve, reject) => reject("Missing Param"));
 
                 let unBanPayload = this.builder.buildMutation("unban_resp",
                     `unbanUser(channelId:${(<BanParam>params)[0].channelId}, userId:${(<BanParam>params)[1].userId})`,
@@ -269,7 +281,7 @@ export class GlimeshConnection extends GlimeshParser {
                 this.connection.send(unBanPayload);
             break;
             case "Unfollow":
-                if (!hasValidParams(["streamerId"], params, [0])) return;
+                if (!hasValidParams(["streamerId"], params, [0])) return new Promise((resolve, reject) => reject("Missing Param"));
 
                 let unFollowPayload = this.builder.buildMutation("unfollow_resp",
                     `unfollow(streamerId: ${(<UnFollowParam>params)[0].streamerId})`,
@@ -278,7 +290,7 @@ export class GlimeshConnection extends GlimeshParser {
                 this.connection.send(unFollowPayload);
             break;
             case "UpdateStreamInfo":
-                if (!hasValidParams(["channelId", "title"], params, [0, 1])) return;
+                if (!hasValidParams(["channelId", "title"], params, [0, 1])) return new Promise((resolve, reject) => reject("Missing Param"));
 
                 let updateStreamPayload = this.builder.buildMutation("update_stream_info_resp",
                     `updateStreamInfo(channelId: ${(<StreamInfoParam>params)[0].channelId}, title: "${(<StreamInfoParam>params)[1].title}")`,
@@ -287,10 +299,29 @@ export class GlimeshConnection extends GlimeshParser {
                 this.connection.send(updateStreamPayload);
             break;
         }
+
+        return mutationResult;
     }
 
-    public createQuery<T extends keyof Query>(query: T, params: Query[T], retVal: string = "") {
-        if (query == "Myself" && !this.usingToken) return;
+    public createQuery<T extends keyof Query>(query: T, params: Query[T], retVal: string = ""): Promise<any> {
+        if (query == "Myself" && !this.usingToken) {
+            console.warn("You attempted to query the myself object without using a token.");
+            return new Promise((resolve, reject) => reject("Cannot query myself with client-id"));
+        }
+
+        let queryResult = new Promise((resolve, reject) => {
+            //if we don't get it in 7 seconds an error was probably returned
+            let tim = setTimeout(() => {
+                reject("Timeout or Error");
+            }, 7000);
+
+            //Setup the listener
+            this.events.once("InternalQuery" as EventName, (data) => {
+                clearTimeout(tim)
+                resolve(data);
+            });
+        })
+
 
         switch (query) {
             case "Categories":
@@ -307,7 +338,7 @@ export class GlimeshConnection extends GlimeshParser {
             break;
             case "Channel":
                 let channelParamSet = pickParam(["id", "streamerUsername", "streamerId"], params,);
-                if (channelParamSet == null) return;
+                if (channelParamSet == null) return new Promise((resolve, reject) => reject("Missing Param"));
 
                 let channelPayload = this.builder.buildQuery("channelQ_resp",
                     `channel(${channelParamSet.param}: ${channelParamSet.val})`,
@@ -316,10 +347,48 @@ export class GlimeshConnection extends GlimeshParser {
                 this.connection.send(channelPayload)
             break;
             case "Channels":
-                return;
+                let channelsParamSet = combineParams(["categorySlug", "status"], params);
+                channelsParamSet += combineParams(["first", "last"], params);
+                channelsParamSet += combineParams(["after", "before"], params);
+                
+                let channelsQuery: string
+                if (channelsParamSet == "") {
+                    channelsQuery = this.builder.buildQuery("channels_resp", 
+                        `channel`, retVal || "edges {node {id, status}}"
+                    );
+                } else {
+                    channelsQuery = this.builder.buildQuery("channels_resp",
+                        `channels(${channelsParamSet})`, retVal || "edges {node {id, status}}"
+                    )
+                }
+                this.connection.send(channelsQuery);
             break;
             case "Followers":
-            return;
+                let followParamSet = pickParam(["userId", "streamerId"], params);
+                if (followParamSet == null) return new Promise((resolve, reject) => reject("Missing Param"));
+                let followPayload: string;
+
+                let followPaginationAmount = pickParam(["first", "last"], params, 1);
+                if (followPaginationAmount == null) {
+                    followPayload = this.builder.buildQuery("followers_resp",
+                        `followers(${followParamSet.param}: ${followParamSet.val})`, 
+                        retVal || "edges {node {user {username}, streamer {username}}}"
+                    );
+                } else {
+                    let followPaginationArea = pickParam(["before", "after"], params, 2);
+                    if (followPaginationArea == null) {
+                        followPayload = this.builder.buildQuery("followers_resp",
+                            `followers(${followParamSet.param}: ${followParamSet.val}, ${followPaginationAmount.param}: ${followPaginationAmount.val})`, 
+                            retVal || "edges {node {user {username}, streamer {username}}}"
+                        );
+                    } else {
+                        followPayload = this.builder.buildQuery("followers_resp",
+                        `followers(${followParamSet.param}: ${followParamSet.val}, ${followPaginationAmount.param}: ${followPaginationAmount.val}, ${followPaginationArea.param}, ${followPaginationArea.val})`, 
+                        retVal || "edges {node {user {username}, streamer {username}}}"
+                    );
+                    }
+                }
+                this.connection.send(followPayload);
             break;
             case "HomepageChannels":
                 let homePagePayload = this.builder.buildQuery("homepage_channels_resp",
@@ -335,7 +404,7 @@ export class GlimeshConnection extends GlimeshParser {
             break;
             case "User":
                 let userParamSet = pickParam(["id", "username"], params,);
-                if (userParamSet == null) return;
+                if (userParamSet == null) return new Promise((resolve, reject) => reject("Missing Param"));
 
                 let userPayload = this.builder.buildQuery("user_resp",
                     `user(${userParamSet.param}: ${userParamSet.val})`, retVal || "id, username"
@@ -343,8 +412,23 @@ export class GlimeshConnection extends GlimeshParser {
                 this.connection.send(userPayload);
             break;
             case "Users":
-            return;
+                let usersParamSet = combineParams(["first", "last"], params);
+                usersParamSet += combineParams(["after", "before"], params);
+                
+                let usersQuery: string
+                if (usersParamSet == "") {
+                    usersQuery = this.builder.buildQuery("users_resp", 
+                        `users`, retVal || "edges {node {id, username}}"
+                    );
+                } else {
+                    usersQuery = this.builder.buildQuery("users_resp",
+                        `users(${usersParamSet})`, retVal || "edges {node {id, username}}"
+                    )
+                }
+                this.connection.send(usersQuery);
             break;
         }
+
+        return queryResult;
     }
 }
