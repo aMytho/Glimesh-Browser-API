@@ -8,7 +8,7 @@ export type Ref = "heartbeat_resp" | "open_resp" | "channel_resp" | "follow_resp
 /**
  * Query refs
  */
-type QueryRef = "categories_resp" | "category_resp" | "channelQ_resp" | "followers_resp" |
+type QueryRef = "categories_resp" | "category_resp" | "channelQ_resp" | "channels_resp" | "followers_resp" |
 "homepage_channels_resp" | "myself_resp" | "user_resp" | "users_resp"
 
 /**
