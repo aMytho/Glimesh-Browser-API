@@ -59,9 +59,31 @@ export function pickParam(choices: ParamName[], params: any, index: number = 0):
         } catch(e) {}
     }
 
-    console.warn(`No param was found. This will prevent the query from running. Requred: ${choices.toString()}, your params: `, params)
+    console.warn(`No param was found. This will prevent the query from running. Required: ${choices.toString()}, your params: `, params)
     //If no param is found return null 
     return null;
+}
+
+/**
+ * Combines a group of params if they exist.
+ * @param choices The choices to look for
+ * @param params The params to search through
+ * @returns The param string
+ */
+export function combineParams(choices: ParamName[], params: any): string {
+    let paramString: string = "";
+    for (const choice of choices) {
+        for (let [index, value] of params.entries()) {
+            if (params[index][choice] != undefined) {
+                if (isString(choice)) {
+                    paramString += `${choice}: "${params[index][choice]}",`
+                } else {
+                    paramString += `${choice}: ${params[index][choice]},` 
+                }
+            }
+        }
+    }
+    return paramString;
 }
 
 /**
@@ -74,6 +96,7 @@ function isString(param: ParamName) {
         "username",
         "streamerUsername",
         "message",
-        "name"
+        "name",
+        "categorySlug"
     ].includes(param);
 }
