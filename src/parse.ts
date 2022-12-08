@@ -70,6 +70,14 @@ export class GlimeshParser {
     private handleData(data: ApiResponse): EventEmit {
         // Make sure its data from an event
         if (data[3] !== "subscription:data") {
+            //Likely a mutation or query
+            if (this.checkMutation(data)) {
+                return {type: "InternalMutation" as EventEmit["data"], data: data[4]}
+            }
+            if (this.checkQuery(data)) {
+                return {type: "InternalQuery" as EventEmit["data"], data: data[4]}
+            }
+
             // We don't know what this is.
             return {type: "Unknown", data: data[4]}
         }
@@ -95,5 +103,43 @@ export class GlimeshParser {
      */
     public getActiveSubscriptions(): ActiveSubscriptions[] {
         return this.subscriptions;
+    }
+
+    /**
+     * Checks if the response is a mutation
+     */
+    private checkMutation(data: ApiResponse) {
+        switch (data[1]) {
+            case "ban_resp":
+            case "chat_resp":
+            case "delete_resp":
+            case "follow_resp":
+            case "long_timeout_resp":
+            case "short_timeout_resp":
+            case "unban_resp":
+            case "unfollow_resp":
+            case "update_stream_info_resp":
+                return true
+            default: return false
+        }
+    }
+
+    /**
+     * Checks if the response is a query
+     */
+    private checkQuery(data: ApiResponse): boolean {
+        switch (data[1]) {
+            case "categories_resp":
+            case "category_resp":
+            case "channelQ_resp":
+            case "channels_resp":
+            case "followers_resp":
+            case "homepage_channels_resp":
+            case "myself_resp":
+            case "user_resp":
+            case "users_resp":
+                return true
+            default: return false
+        }
     }
 }
