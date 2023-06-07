@@ -2,6 +2,7 @@
 
 This is a library for working with the Glimesh.tv API. It is currently in alpha so some bugs may occur.
 
+> As of July 1st, Glimesh is no longer active. However, the code is still open source. As a result, this library has been modified to work with custom Glimesh instances. Simply pass in the base url `glimesh.tv` or your own site `betterGlim.net` and whether or not you want to use WSS. See the connection below for an example!
 
 ## Installation
 
@@ -19,7 +20,11 @@ import {GlimeshConnection} from "glimesh-browser-api"
 // Create a connection with a client ID or an access token
 let connection = new GlimeshConnection({
     clientId: "",
-    accessToken: ""
+    accessToken: "",
+    baseURL: "glimesh.tv", // Do not add wss:// or an ending slash
+    // Ex: baseURL: "localhost:4000",
+    // Ex 2: baseURL: "mysite.net",
+    useSSL: true // If true, will use wss instead of ws.
 });
 
 // Opens the connection. If true it will connect with an access token
@@ -65,7 +70,7 @@ connection.getEvents().emit("customData", "mmm very custom");
 > Emitting a custom event with custom data
 
 
-The libary has type defs for all of the built in mutations, subscriptions, and queries. Note that only non paginated queries are supported. They will be added in a future version.
+The libary has type defs for all of the built in mutations, subscriptions, and queries. Note that only non paginated queries are supported at this time. 
 
 ## Websocket
 

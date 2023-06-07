@@ -28,6 +28,15 @@ export class GlimeshConnection extends GlimeshParser {
      */
     private usingToken?: boolean = false
     /**
+     * The base URL to connect to (allows for custom Glimesh instances)
+     * Ex: glimesh.tv, mywebsite.net, mytho.tv, etc.
+     */
+    private baseURL: string = "";
+    /**
+     * If true, will use WSS instead of WS
+     */
+    private useSSL: boolean = true
+    /**
      * The websocket connection to Glimesh.
      */
     private connection!: WebSocket;
@@ -50,12 +59,16 @@ export class GlimeshConnection extends GlimeshParser {
 
     constructor(authInfo: {
         clientId?: string,
-        accessToken?: string
+        accessToken?: string,
+        baseURL: string,
+        useSSL: boolean
     }
     ) {
         super();
         this.clientId = authInfo.clientId;
         this.accessToken = authInfo.accessToken;
+        this.baseURL = authInfo.baseURL;
+        this.useSSL = authInfo.useSSL;
     }
 
     /**
@@ -73,13 +86,14 @@ export class GlimeshConnection extends GlimeshParser {
      */
     public connectToGlimesh(useToken: boolean = false): boolean {
         if (!this.connection) {
+            let wsProtocol: string = this.useSSL ? "wss://" : "ws://";
             if (useToken) {
                 this.connection = new WebSocket(
-                    `${Constants.WEBSOCKET_URL}?vsn=2.0.0&token=${this.accessToken}`
+                    `${wsProtocol}${this.baseURL}${Constants.WEBSOCKET_URL}?vsn=2.0.0&token=${this.accessToken}`
                 );
             } else {
                 this.connection = new WebSocket(
-                    `${Constants.WEBSOCKET_URL}?vsn=2.0.0&client_id=${this.clientId}`
+                    `${wsProtocol}${this.baseURL}${Constants.WEBSOCKET_URL}?vsn=2.0.0&client_id=${this.clientId}`
                 );
             }
 
